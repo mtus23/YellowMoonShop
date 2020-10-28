@@ -1,0 +1,6 @@
+account admin: 
+	userId: admin
+	password: admin
+account user:
+	userId: user
+	password: user
