@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import jlp0011.dto.CartDTO;
+import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -34,6 +35,7 @@ public class UpdateCartController extends HttpServlet {
     private final String CART_PAGE = "cart.jsp";
     private final String ERROR = "error.jsp";
     private final static Logger LOG = Logger.getLogger(UpdateCartController.class);
+    private final String SREACH = "search.jsp";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -42,27 +44,32 @@ public class UpdateCartController extends HttpServlet {
             /* TODO output your page here. You may use following sample code. */
             String url = ERROR;
             try {
-                HttpSession session = request.getSession(false);
-                if (session != null) {
-                    CartDTO cart = (CartDTO) session.getAttribute("Cart");
+                HttpSession session = request.getSession();
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (!(user != null && user.getRoleId() == 1)) {
+                    CartDTO cart = (CartDTO) session.getAttribute("cart");
 
-                    if (cart != null) {
+                    if (cart.getItems() != null) {
                         String[] items = request.getParameterValues("cbItem");
                         if (items != null) {
                             for (String item : items) {
                                 int proId = Integer.parseInt(item);
                                 String quantityText = request.getParameter("txtQuantity" + proId);
                                 int quantity = Integer.parseInt(quantityText);
-                                cart.UpdateProductFromCart(proId, quantity);
+                                cart.updateProductFromCart(proId, quantity);
                             }
                             int total = cart.getTotalPrice();
-                            session.setAttribute("TotalBill", total);
-                            session.setAttribute("Cart", cart);
+                            session.setAttribute("totalBill", total);
+                            session.setAttribute("cart", cart);
+                            request.setAttribute("updateSuccess", "Update cart success");
                         }
                     }
+                    url = CART_PAGE;
+                } else {
+                    request.setAttribute("updateFail", "Update cart fail");
+                    url = SREACH;
                 }
-                url = CART_PAGE;
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 LOG.error(e.toString());
             } finally {
                 RequestDispatcher rd = request.getRequestDispatcher(url);

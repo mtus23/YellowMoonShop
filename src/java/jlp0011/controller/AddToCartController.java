@@ -18,6 +18,7 @@ import javax.servlet.http.HttpSession;
 import jlp0011.dao.ProductDAO;
 import jlp0011.dto.CartDTO;
 import jlp0011.dto.ProductDTO;
+import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -49,16 +50,22 @@ public class AddToCartController extends HttpServlet {
             ProductDAO productDao = new ProductDAO();
             HttpSession session = request.getSession();
             try {
-                CartDTO cart = (CartDTO) session.getAttribute("Cart");
-                if (cart == null) {
-                    cart = new CartDTO();
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (!(user != null && user.getRoleId() == 1)) {
+                    CartDTO cart = (CartDTO) session.getAttribute("cart");
+                    if (cart == null) {
+                        cart = new CartDTO();
+                    }
+                    int proId = Integer.parseInt(productId);
+                    ProductDTO dto = productDao.getProduct(proId);
+                    cart.addProductToCart(dto, 1);
+                    int total = cart.getTotalPrice();
+                    session.setAttribute("totalBill", total);
+                    session.setAttribute("cart", cart);
+                    request.setAttribute("AddSuccess", "Adding cake to cart successful");
+                } else {
+                    request.setAttribute("AddFail", "Adding cake to cart fail");
                 }
-                int proId = Integer.parseInt(productId);
-                ProductDTO dto = productDao.getProduct(proId);
-                cart.addProductToCart(dto, 1);
-                int total = cart.getTotalPrice();
-                session.setAttribute("TotalBill", total);
-                session.setAttribute("Cart", cart);
                 url = SEARCH;
             } catch (SQLException | NamingException | ClassNotFoundException e) {
                 LOG.error(e.toString());

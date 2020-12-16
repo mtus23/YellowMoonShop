@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import jlp0011.dao.CategoryDAO;
 import jlp0011.dto.CategoryDTO;
+import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -28,6 +29,8 @@ public class CreateCategoryController extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(CreateCategoryController.class);
     private final String ERROR = "listCategory.jsp";
     private final String LOAD_LIST = "ListAllCategoryController";
+    private final String SEARCH = "search.jsp";
+    private final String LOGIN = "login.jsp";
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -47,18 +50,27 @@ public class CreateCategoryController extends HttpServlet {
             CategoryDAO dao = new CategoryDAO();
             HttpSession session = request.getSession();
             try {
-                String name = request.getParameter("txtCategoryName");
-                boolean check = dao.checkDuplicatedName(name);
-                if (check) {
-                    request.setAttribute("CreateCategoryError", "Category name is Existed");
-                } else {
-                    CategoryDTO cate = new CategoryDTO(name);
-                    dao.addCategory(cate);
-                    if (session.getAttribute("ListCategory") != null) {
-                        session.removeAttribute("ListCategory");
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
+                } else if (user.getRoleId() == 1) {
+                    String name = request.getParameter("txtCategoryName");
+                    boolean check = dao.checkDuplicatedName(name);
+                    if (check) {
+                        request.setAttribute("createCategoryError", "Category name is Existed");
+                    } else {
+                        CategoryDTO cate = new CategoryDTO(name);
+                        dao.addCategory(cate);
+                        if (session.getAttribute("listCategory") != null) {
+                            session.removeAttribute("listCategory");
+                        }
+                        session.setAttribute("listCategory", cate);
+                        url = LOAD_LIST;
                     }
-                    session.setAttribute("ListCategory", cate);
-                    url = LOAD_LIST;
+                } else {
+                    request.setAttribute("noRight", "Create category fail");
+                    url = SEARCH;
                 }
             } catch (NamingException | SQLException | ClassNotFoundException e) {
 

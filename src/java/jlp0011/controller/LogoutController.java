@@ -43,14 +43,15 @@ public class LogoutController extends HttpServlet {
             try {
                 HttpSession session = request.getSession(false);
                 if (session != null) {
-                    session.invalidate();
+                    session.removeAttribute("user");
+                    session.removeAttribute("cart");
+                    session.removeAttribute("totalBill");
                 }
                 url = SEARCH_PAGE;
             } catch (Exception e) {
                 LOG.error(e.getMessage());
             } finally {
-                RequestDispatcher rd = request.getRequestDispatcher(url);
-                rd.forward(request, response);
+                response.sendRedirect(url);
             }
         }
     }

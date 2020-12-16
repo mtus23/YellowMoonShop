@@ -5,21 +5,27 @@
  */
 package jlp0011.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
-import java.sql.SQLException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import javax.naming.NamingException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import jlp0011.dao.ProductDAO;
 import jlp0011.dto.ProductDTO;
-import jlp0011.util.ValidImage;
+import jlp0011.dto.UserDTO;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
 /**
@@ -40,47 +46,74 @@ public class CreateCakeController extends HttpServlet {
     private final static Logger LOG = Logger.getLogger(CreateCakeController.class);
     private final String SUCCESS = "ListAllCakeController";
     private final String ERROR = "createCake.jsp";
-
+    private final String SEARCH = "search.jsp";
+    private final String LOGIN ="login.jsp";
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
             String url = ERROR;
-            boolean check = true;
             ProductDAO proDao = new ProductDAO();
+            HttpSession session = request.getSession();
             try {
-                String name = request.getParameter("txtProductName");
-                String imageLink = request.getParameter("txtImage");
-                String des = request.getParameter("txtDescription");
-                String price = request.getParameter("txtPrice");
-                String quantity = request.getParameter("txtQuantity");
-                String creDate = request.getParameter("txtCreateDate");
-                String expDate = request.getParameter("txtExpirationDate");
-                String cateId = request.getParameter("cboCategory");
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
+                }
+                else if (user.getRoleId() == 1) {
+                    boolean isMultiPart = ServletFileUpload.isMultipartContent(request);
+                    if (isMultiPart) {
 
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                Date createDate = new java.sql.Date((format.parse(creDate).getTime()));
-                Date expirationDate = new java.sql.Date((format.parse(expDate).getTime()));
-                if (!(expirationDate.compareTo(createDate) > 0)) {
-                    request.setAttribute("ErrorDate", "Expiration date must be after create date");
-                    check = false;
+                        String imageName = null;
+                        FileItemFactory factory = new DiskFileItemFactory();
+                        ServletFileUpload upload = new ServletFileUpload(factory);
+                        HashMap params = new HashMap();
+                        List items = upload.parseRequest(request);
+                        Iterator iter = items.iterator();
+                        while (iter.hasNext()) {
+                            FileItem item = (FileItem) iter.next();
+                            if (item.isFormField()) {
+                                params.put(item.getFieldName(), item.getString());
+                            } else {
+                                String itemName = item.getName();
+                                imageName = itemName.substring(
+                                        itemName.lastIndexOf("\\") + 1);
+                                if (!proDao.checkImage(imageName)) {
+                                
+                                String RealPath = getServletContext().getRealPath("/")
+                                        + "images\\" + imageName;
+                                File savedFile = new File(RealPath);
+                                item.write(savedFile);
+                                }
+                            }
+                        }
+                        if (!proDao.checkImage(imageName)) {
+                            String name = (String)params.get("txtProductName");
+                            String des = (String)params.get("txtDescription");
+                            String price = (String)params.get("txtPrice");
+                            String quantity = (String)params.get("txtQuantity");
+                            String expDate = (String)params.get("txtExpirationDate");
+                            String cateId = (String)params.get("cboCategory");
+                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                            Date createDate = new Date(System.currentTimeMillis());
+                            Date expirationDate = new java.sql.Date((format.parse(expDate).getTime()));
+                            int numPrice = Integer.parseInt(price);
+                            int numQuantity = Integer.parseInt(quantity);
+                            int numCateId = Integer.parseInt(cateId);
+                            ProductDTO pro = new ProductDTO(name, des, numPrice, numQuantity, numCateId, createDate, expirationDate, imageName);
+                            proDao.addProduct(pro);
+                            url = SUCCESS;
+                            request.setAttribute("createSuccess", "Create cake Success");
+                        }
+                    }
+                } else {
+                    request.setAttribute("noRight", "Create cake fail");
+                    url = SEARCH;
                 }
-                boolean imagecheck = ValidImage.isImageExist(imageLink);
-                if (!imagecheck) {
-                    request.setAttribute("ErrorImage", "Cant find image");
-                    check = false;
-                }
-                if (check) {
-                    int numPrice = Integer.parseInt(price);
-                    int numQuantity = Integer.parseInt(quantity);
-                    int numCateId = Integer.parseInt(cateId);
-                    ProductDTO pro = new ProductDTO(name, des, numPrice, numQuantity, numCateId, createDate, expirationDate, imageLink);
-                    proDao.addProduct(pro);
-                    url = SUCCESS;
-                }
-                LOG.info(check);
-            } catch (ParseException | SQLException | NamingException | ClassNotFoundException e) {
+
+            } catch (Exception e) {
                 LOG.error(e.toString());
             } finally {
                 RequestDispatcher rd = request.getRequestDispatcher(url);

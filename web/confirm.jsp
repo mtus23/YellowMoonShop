@@ -23,45 +23,61 @@
             .container{
                 margin-top: 25px;
             }
+            .nav-item{
+                margin-right: 5px;
+            }
         </style>
     </head>
     <body>
-        <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-            <a class="nav-item" href="search.jsp">Search Page</a>
-            <c:if test="${sessionScope.User.roleId!=1}">
-                <a class="nav-item" href="cart.jsp">My cart</a>
-            </c:if>
-            <c:if test="${sessionScope.User.roleId==2}">
-                <a class="nav-item" href="searchOrder.jsp">My history</a>
-            </c:if>
-
-            <c:if test="${empty sessionScope.User}">
-                <a href="login.jsp" class="nav-item my-2"><button class="btn btn-primary">login</button></a>
-
-            </c:if>  
-            <c:if test="${not empty sessionScope.User}">
-                <a class="nav-item my-2" href="LogoutController"><button class="btn btn-primary">Logout</button></a>
-            </c:if>
+        <c:if test="${sessionScope.user.roleId == 1}">
+            <c:redirect url="search.jsp"></c:redirect>
+        </c:if>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #e3f2fd;">
+            <a class="navbar-brand" href="search.jsp">Yellow Moon</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                    <li class="nav-item">  
+                        <a class="nav-item" href="search.jsp">Search Page</a>
+                    </li>
+                    <c:if test="${sessionScope.user.roleId!=1}">
+                        <li class="nav-item">
+                            <a class="nav-item" href="cart.jsp">My cart</a>
+                        </li>
+                    </c:if>
+                    <c:if test="${sessionScope.user.roleId==2}">
+                        <li class="nav-item">
+                            <a class="nav-item" href="listOrderHistory">My history</a>
+                        </li>
+                    </c:if>
+                </ul>
+                <span class="nav-item my-2">
+                    <c:if test="${empty sessionScope.user}">
+                        <a href="login.jsp" class="nav-item my-2"><button class="btn btn-primary">login</button></a>
+                    </c:if>  
+                    <c:if test="${not empty sessionScope.user}">
+                        <a class="nav-item my-2" href="LogoutController"><button class="btn btn-primary">Logout</button></a>
+                    </c:if>
+                </span>
+            </div>
         </nav>
+
         <div class="container mt-5">
-            <c:if test="${empty requestScope.AddSuccess}">
+            <c:if test="${empty requestScope.addSuccess}">
                 <div class="d-flex justify-content-center m-1">
                     <h3>Please confirm before progressing</h3>
                     <hr>
                 </div>
-                <div class="d-flex justify-content-center m-1">
-                    <c:if test="${empty sessionScope.Cart}">
-                        <div class="m-3"> <h3>No items</h3></div>
-                    </c:if>
-                </div>
                 <div class="d-flex justify-content-center m-1 col">
-                    Name: ${requestScope.CustomerName}<br>
-                    Address: ${requestScope.CustomerAddress}<br>
-                    Phone: ${requestScope.CustomerPhone}<br>
+                    Name: ${requestScope.customerName}<br>
+                    Address: ${requestScope.customerAddress}<br>
+                    Phone: ${requestScope.customerPhone}<br>
                     <hr>
                 </div>
                 <div class="d-flex justify-content-center">
-                    <c:if test="${not empty sessionScope.Cart.items}">
+                    <c:if test="${not empty sessionScope.cart.items}">
                         <div class="table col m-3">
                             <table border="1">
                                 <thead>
@@ -74,7 +90,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <c:forEach var="item" items="${sessionScope.Cart.items}" varStatus="counter">
+                                    <c:forEach var="item" items="${sessionScope.cart.items}" varStatus="counter">
                                         <tr>
                                             <td>${counter.count}</td>
                                             <td>${item.key.name}</td>
@@ -89,7 +105,7 @@
                                         <td colspan="2">
                                             <p>Total Bill</p>
                                         <td colspan="3">
-                                            ${sessionScope.TotalBill} VND
+                                            ${sessionScope.totalBill} VND
                                         </td>
                                     </tr>
                                 </tbody>
@@ -99,19 +115,19 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center">
-                    <form action="ProccessPaymentController" method="POST">
-                        <input type="hidden" name="txtCustomerName" value="${requestScope.CustomerName}" />
-                        <input type="hidden" name="txtCustomerAddress" value="${requestScope.CustomerAddress}" />
-                        <input type="hidden" name="txtCustomerPhone" value="${requestScope.CustomerPhone}" />
+                    <form action="proccessPayment" method="POST">
+                        <input type="hidden" name="txtCustomerName" value="${requestScope.customerName}" />
+                        <input type="hidden" name="txtCustomerAddress" value="${requestScope.customerAddress}" />
+                        <input type="hidden" name="txtCustomerPhone" value="${requestScope.customerPhone}" />
                         <input type="submit" value="Checkout" class="btn btn-primary"
                                onclick="return confirm('Are you sure you want to continue?');"/>
                     </form>
                 </div>
             </c:if>
             <div class="d-flex justify-content-center row">
-                <c:if test="${not empty requestScope.AddSuccess}">
-                    <p class="m-3">${requestScope.AddSuccess}</p><br>
-                    <p class="m-3">Your Order Id is : ${requestScope.OrderId}</p>
+                <c:if test="${not empty requestScope.addSuccess}">
+                    <p class="m-3">${requestScope.addSuccess}</p><br>
+                    <p class="m-3">Your Order Id is : ${requestScope.orderId}</p>
                     <script>
                         alert("Checkout successfully");
                     </script>

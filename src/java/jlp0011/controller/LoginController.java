@@ -48,18 +48,19 @@ public class LoginController extends HttpServlet {
             String password = request.getParameter("txtPassword");
             HttpSession session = request.getSession();
             try {
-                UserDAO dao = new UserDAO();
-                UserDTO dto = dao.checkLogin(userId, password);
-
-                if (dto != null) {
-                    session.setAttribute("User", dto);
-                    if (session.getAttribute("Cart") != null) {
-                        session.removeAttribute("Cart");
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    UserDAO dao = new UserDAO();
+                    UserDTO dto = dao.checkLogin(userId, password);
+                    if (dto != null) {
+                        session.setAttribute("user", dto);
+                        url = SEARCH_PAGE;
+                    } else {
+                        String msg = "Wrong mail or password";
+                        request.setAttribute("loginError", msg);
                     }
+                }else{
                     url = SEARCH_PAGE;
-                } else {
-                    String msg = "Wrong mail or password";
-                    request.setAttribute("loginError", msg);
                 }
             } catch (SQLException | ClassNotFoundException | NamingException e) {
                 LOG.error(e.getMessage());

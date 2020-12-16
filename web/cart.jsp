@@ -23,37 +23,69 @@
             .container{
                 margin-top: 25px;
             }
+            .nav-item{
+                margin-right: 5px;
+            }
         </style>
     </head>
     <body>
-        <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-            <a class="nav-item" href="search.jsp">Search Page</a>
-            <c:if test="${sessionScope.User.roleId!=1}">
-                <a class="nav-item" href="cart.jsp">My cart</a>
-            </c:if>
-                <c:if test="${sessionScope.User.roleId==2}">
-                <a class="nav-item" href="searchOrder.jsp">My history</a>
-            </c:if>
-            <c:if test="${empty sessionScope.User}">
-                <a href="login.jsp" class="nav-item my-2"><button class="btn btn-primary">login</button></a>
 
-            </c:if>  
-            <c:if test="${not empty sessionScope.User}">
-                <a class="nav-item my-2" href="LogoutController"><button class="btn btn-primary">Logout</button></a>
-            </c:if>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #e3f2fd;">
+            <a class="navbar-brand" href="search.jsp">Yellow Moon</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                    <li class="nav-item">  
+                        <a class="nav-item" href="search.jsp">Search Page</a>
+                    </li>
+                    <c:if test="${sessionScope.user.roleId!=1}">
+                        <li class="nav-item">
+                            <a class="nav-item" href="cart.jsp">My cart</a>
+                        </li>
+                    </c:if>
+                    <c:if test="${sessionScope.user.roleId==2}">
+                        <li class="nav-item">
+                            <a class="nav-item" href="listOrderHistory">My history</a>
+                        </li>
+                    </c:if>
+                </ul>
+                <span class="nav-item my-2">
+                    <c:if test="${empty sessionScope.user}">
+                        <a href="login.jsp" class="nav-item my-2"><button class="btn btn-primary">login</button></a>
+                    </c:if>  
+                    <c:if test="${not empty sessionScope.user}">
+                        <a class="nav-item my-2" href="logout"><button class="btn btn-primary">Logout</button></a>
+                    </c:if>
+                </span>
+            </div>
         </nav>
+        <c:if test="${sessionScope.user.roleId == 1}">
+            <c:redirect url="search.jsp"></c:redirect>
+        </c:if>
+        <c:if test="${not empty requestScope.updateSuccess}">
+            <div class="alert alert-success" role="alert">
+                ${requestScope.updateSuccess}
+            </div>
+        </c:if>
+        <c:if test="${not empty requestScope.removeCartSuccess}">
+            <div class="alert alert-success" role="alert">
+                ${requestScope.removeCartSuccess}
+            </div>
+        </c:if>
         <div class="container mt-5">
             <div class="d-flex justify-content-center m-1">
                 <h3>Your cart</h3>
                 <hr>
             </div>
             <div class="d-flex justify-content-center m-1">
-                <c:if test="${empty sessionScope.Cart}">
+                <c:if test="${empty sessionScope.cart.items}">
                     <div class="m-3"> <h3>No items</h3></div>
                 </c:if>
             </div>
             <div class="d-flex justify-content-center">
-                <c:if test="${not empty sessionScope.Cart.items}">
+                <c:if test="${not empty sessionScope.cart.items}">
                     <div class="table col m-3">
                         <table border="1">
                             <thead>
@@ -67,8 +99,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            <form action="CartController" method="POST">
-                                <c:forEach var="item" items="${sessionScope.Cart.items}" varStatus="counter">
+                            <form action="cart" method="POST">
+                                <c:forEach var="item" items="${sessionScope.cart.items}" varStatus="counter">
                                     <tr>
                                         <td>${counter.count}</td>
                                         <td>${item.key.name}</td>
@@ -85,7 +117,7 @@
                                         <p>Total Bill</p>
                                     </td>
                                     <td>
-                                        ${sessionScope.TotalBill} VND
+                                        ${sessionScope.totalBill} VND
                                     </td>
                                     <td colspan="2">
                                         <input type="submit" name="btnAction" value="Update selected products" class="btn btn-primary" /><br>
@@ -102,24 +134,27 @@
                 </div>
             </div>
             <div class="d-flex justify-content-center">
-                <c:if test="${not empty requestScope.CheckOutError}">
-                    <p style="color: red;">${requestScope.CheckOutError}</p>
+                <c:if test="${not empty requestScope.checkOutError}">
+                    <p style="color: red;">${requestScope.checkOutError}</p>
                 </c:if>
-                <c:if test="${not empty requestScope.OutOfBoundCakeError}">
-                    <c:forEach var="error" items="${requestScope.OutOfBoundCakeError}">
-                    <p style="color: red;">${error}</p>
-                    </c:forEach>
+                <c:if test="${not empty requestScope.outOfBoundCakeError}">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">Error! Not enough cake</h4>
+                        <c:forEach var="error" items="${requestScope.outOfBoundCakeError}">
+                            <p>${error}</p>
+                        </c:forEach>
+                    </div>
                 </c:if>
             </div>
 
             <div class="d-flex justify-content-center">
-                <form action="CheckOutController" method="POST">
+                <form action="checkOut" method="POST">
                     <div class="form-group row">
 
                         <label>Name: </label>
                         <input name="txtCustomer" type="text" min="1" max="60" class="form-control"
-                               <c:if test="${not empty sessionScope.User}">
-                                   value="${sessionScope.User.name}"
+                               <c:if test="${not empty sessionScope.user}">
+                                   value="${sessionScope.user.name}"
                                </c:if>
                                <c:if test="${not empty param.txtCustomer}">
                                    value="${param.txtCustomer}"
@@ -129,8 +164,8 @@
                     <div class="form-group row">
                         <label>Address: </label>
                         <input name="txtAddress" type="text" min="1" max="50" class="form-control"
-                               <c:if test="${not empty sessionScope.User}">
-                                   value="${sessionScope.User.address}"
+                               <c:if test="${not empty sessionScope.user}">
+                                   value="${sessionScope.user.address}"
                                </c:if>
                                <c:if test="${not empty param.txtAddress}">
                                    value="${param.txtAddress}"
@@ -140,16 +175,17 @@
                     <div class="form-group row">
                         <label>Phone: </label>
                         <input name="txtPhone" type="text" class="form-control"
-                               <c:if test="${not empty sessionScope.User}">
-                                   value="${sessionScope.User.phone}"
+                               <c:if test="${not empty sessionScope.user}">
+                                   value="${sessionScope.user.phone}"
                                </c:if>
                                <c:if test="${not empty param.txtPhone}">
                                    value="${param.txtPhone}"
                                </c:if>
-                               required />
+                                   id="phoneNumber"
+                                   required onblur="checkPhoneNumber()">
                     </div>
                     <div class="form-group d-flex justify-content-center">
-                        <input class="btn btn-primary" type="submit" value="Checkout" onclick="checkPhoneNumber()">
+                        <input class="btn btn-primary" type="submit" value="Checkout">
                     </div>
                 </form>
             </div>

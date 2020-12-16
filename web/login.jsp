@@ -20,8 +20,40 @@
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
-
+        <style>
+            .nav-item{
+                margin-right: 5px;
+            }
+        </style>
     </head>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #e3f2fd;">
+        <a class="navbar-brand" href="search.jsp">Yellow Moon</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                <li class="nav-item">  
+                    <a class="nav-item" href="search.jsp">Search Page</a>
+                </li>
+                <c:if test="${sessionScope.user.roleId!=1}">
+                    <li class="nav-item">
+                        <a class="nav-item" href="cart.jsp">My cart</a>
+                    </li>
+                </c:if>
+            </ul>
+            <span class="nav-item my-2">
+                <c:if test="${empty sessionScope.user}">
+                    <a href="login.jsp" class="nav-item my-2"><button class="btn btn-primary">login</button></a>
+                </c:if>
+            </span>
+        </div>
+    </nav>
+        <c:if test="${not empty requestScope.userNotAuthenticated}">
+            <div class="alert alert-danger" role="alert">
+                ${requestScope.userNotAuthenticated}
+            </div>
+        </c:if>
     <body class="text-center">
         <div class="container">
             <div class="row justify-content-center mt-5">
@@ -34,7 +66,7 @@
                                 <p style="color: red">${requestScope.loginError}</p>
                                 <hr>
                             </c:if>
-                            <form action="LoginController" method="POST">
+                                <form action="login" method="POST">
                                 <div class="form-group">
                                     <div class="input-group">
                                         <div class="input-group-prepend">
@@ -56,9 +88,9 @@
                                 </div> 
                             </form>
                             <hr>
-                            <p class="text-center"><a href="https://www.facebook.com/dialog/oauth?client_id=3350648078375882&redirect_uri=http://localhost:8084/J3LP0011/LoginFacebookController"><button class="btn btn-light btn-block">Login by Facebook</button></a></p>
+                            <p class="text-center"><a href="https://www.facebook.com/dialog/oauth?client_id=3350648078375882&redirect_uri=http://localhost:8084/NguyenHoangMinhTu_Lab2/loginFacebook"><button class="btn btn-light btn-block">Login by Facebook</button></a></p>
                             <hr>
-                            <a class="text-center">Return search page</a>
+                            <a class="text-center" href="search.jsp">Return search page</a>
                         </article>
                     </div>
                 </aside>

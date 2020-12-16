@@ -3,7 +3,15 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/lab%20web/J3LP0011/src/java/jlp0011/controller/LoginController.java</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/src/java/jlp0011/dao/ProductDAO.java</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/src/java/jlp0011/controller/CreateCakeController.java</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/src/java/jlp0011/controller/UpdateCakeController.java</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/web/listCategory.jsp</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/src/java/jlp0011/controller/UpdateCartController.java</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/src/java/jlp0011/filter/DispatcherFilter.java</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/web/listCake.jsp</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/web/createCake.jsp</file>
+            <file>file:/D:/lab%20web/NguyenHoangMinhTu_Lab2/web/updateCake.jsp</file>
         </group>
     </open-files>
 </project-private>

@@ -15,9 +15,9 @@ import jlp0011.dto.UserDTO;
  * @author DELL
  */
 public class APIWapper {
-     private final String appId = "***";
-    private final String appSecret = "***";
-    private final String redirectUrl = "***";
+    private final String appId = "3350648078375882";
+    private final String appSecret = "7888781bc9394ee2a41d23d35cd4e773";
+    private final String redirectUrl = "http://localhost:8084/NguyenHoangMinhTu_Lab2/loginFacebook";
     private String accessToken;
 
     public String getAccessToken() {

@@ -57,20 +57,20 @@ public class SearchCakeController extends HttpServlet {
                 if (page != null) {
                     currentPage = Integer.parseInt(page);
                 }
-                if (cate.equals("------All------")) {
+                int cateId = Integer.parseInt(cate);
+                if (cateId == 0) {
                     result = proDao.searchProduct(name, rangePrice, currentPage, ROWS_PER_PAGE);
-                    numOfProduct = proDao.CountSearchProduct(name, rangePrice);
+                    numOfProduct = proDao.countSearchProduct(name, rangePrice);
                 } else {
-                    int cateId = Integer.parseInt(cate);
                     result = proDao.searchProduct(name, rangePrice, cateId, currentPage, ROWS_PER_PAGE);
-                    numOfProduct = proDao.CountSearchProduct(name, rangePrice, cateId);
+                    numOfProduct = proDao.countSearchProduct(name, rangePrice, cateId);
                 }
                 int numOfPage = (int) (Math.ceil((numOfProduct * 1.0) / ROWS_PER_PAGE));
                 if (currentPage > numOfPage || currentPage <= 0) {
                     currentPage = 1;
                 }
                 if (result == null) {
-                    request.setAttribute("ErrorSearch", "Cake not found");
+                    request.setAttribute("errorSearch", "Cake not found");
                 } else {
                     request.setAttribute("numberOfPage", numOfPage);
                     request.setAttribute("currentPage", currentPage);

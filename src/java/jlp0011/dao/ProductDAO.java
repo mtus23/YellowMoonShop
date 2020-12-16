@@ -21,7 +21,7 @@ import jlp0011.util.DBUtil;
  *
  * @author DELL
  */
-public class ProductDAO implements Serializable{
+public class ProductDAO implements Serializable {
 
     private Connection con;
     private PreparedStatement stm;
@@ -131,7 +131,7 @@ public class ProductDAO implements Serializable{
                     + "createDate = ?, "
                     + "expirationDate = ?, "
                     + "categoryId =?, "
-                    +"status = ? "
+                    + "status = ? "
                     + "WHERE productId = ?";
             con = DBUtil.getConnection();
             stm = con.prepareStatement(sql);
@@ -151,7 +151,7 @@ public class ProductDAO implements Serializable{
         }
         return check;
     }
-    
+
     public List<ProductDTO> searchProduct(String name, int rangePrice, int currentPage, int rowPerPage) throws SQLException, ClassNotFoundException, NamingException {
         List<ProductDTO> result = null;
         try {
@@ -163,7 +163,7 @@ public class ProductDAO implements Serializable{
                     + "FETCH NEXT ? ROWS ONLY ";
             con = DBUtil.getConnection();
             stm = con.prepareStatement(sql);
-            stm.setString(1, "%"+name+"%");
+            stm.setString(1, "%" + name + "%");
             stm.setInt(2, rangePrice);
             stm.setInt(3, currentPage);
             stm.setInt(4, rowPerPage);
@@ -191,7 +191,7 @@ public class ProductDAO implements Serializable{
         }
         return result;
     }
-    
+
     public List<ProductDTO> searchProduct(String name, int rangePrice, int cateId, int currentPage, int rowPerPage) throws SQLException, ClassNotFoundException, NamingException {
         List<ProductDTO> result = null;
         try {
@@ -203,7 +203,7 @@ public class ProductDAO implements Serializable{
                     + "FETCH NEXT ? ROWS ONLY ";
             con = DBUtil.getConnection();
             stm = con.prepareStatement(sql);
-            stm.setString(1, "%"+name+"%");
+            stm.setString(1, "%" + name + "%");
             stm.setInt(2, rangePrice);
             stm.setInt(3, cateId);
             stm.setInt(4, currentPage);
@@ -231,16 +231,16 @@ public class ProductDAO implements Serializable{
         }
         return result;
     }
-    
-    public int CountSearchProduct(String name, int rangePrice, int cateId) throws SQLException, ClassNotFoundException, NamingException {
+
+    public int countSearchProduct(String name, int rangePrice, int cateId) throws SQLException, ClassNotFoundException, NamingException {
         int result = 0;
         try {
             String sql = "SELECT COUNT(productId) AS NumberOdProduct "
                     + "FROM tblProduct "
-                    + "WHERE name LIKE ? AND price < ? AND categoryId = ? AND status = 1";
+                    + "WHERE name LIKE ? AND price < ? AND categoryId = ? AND status = 1 AND quantity > 0";
             con = DBUtil.getConnection();
             stm = con.prepareStatement(sql);
-            stm.setString(1, "%"+name+"%");
+            stm.setString(1, "%" + name + "%");
             stm.setInt(2, rangePrice);
             stm.setInt(3, cateId);
             rs = stm.executeQuery();
@@ -252,16 +252,16 @@ public class ProductDAO implements Serializable{
         }
         return result;
     }
-    
-    public int CountSearchProduct(String name, int rangePrice) throws SQLException, ClassNotFoundException, NamingException {
+
+    public int countSearchProduct(String name, int rangePrice) throws SQLException, ClassNotFoundException, NamingException {
         int result = 0;
         try {
             String sql = "SELECT COUNT(productId) AS NumberOdProduct "
                     + "FROM tblProduct "
-                    + "WHERE name LIKE ? AND price < ?  AND status = 1";
+                    + "WHERE name LIKE ? AND price < ?  AND status = 1 AND quantity > 0";
             con = DBUtil.getConnection();
             stm = con.prepareStatement(sql);
-            stm.setString(1, "%"+name+"%");
+            stm.setString(1, "%" + name + "%");
             stm.setInt(2, rangePrice);
             rs = stm.executeQuery();
             if (rs.next()) {
@@ -272,8 +272,8 @@ public class ProductDAO implements Serializable{
         }
         return result;
     }
-    
-        public ProductDTO getProduct(int productId) throws SQLException, ClassNotFoundException, NamingException {
+
+    public ProductDTO getProduct(int productId) throws SQLException, ClassNotFoundException, NamingException {
         ProductDTO result = null;
         try {
             String sql = "SELECT name, price, description, quantity, createDate, expirationDate, image, status, categoryId  "
@@ -299,5 +299,22 @@ public class ProductDAO implements Serializable{
             closeConnection();
         }
         return result;
+    }
+
+    public boolean checkImage(String image) throws SQLException, ClassNotFoundException, NamingException {
+        boolean check = false;
+        try {
+            String sql = "SELECT productId FROM tblProduct WHERE image = ?";
+            con = DBUtil.getConnection();
+            stm = con.prepareStatement(sql);
+            stm.setString(1, image);
+            rs = stm.executeQuery();
+            if (rs.next()) {
+                check = true;
+            }
+        } finally {
+            closeConnection();
+        }
+        return check;
     }
 }

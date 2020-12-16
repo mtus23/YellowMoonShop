@@ -11,6 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import javax.naming.NamingException;
 import jlp0011.dto.OrderDTO;
@@ -21,9 +23,6 @@ import jlp0011.util.DBUtil;
  * @author DELL
  */
 public class OrderDAO implements Serializable {
-
-    public OrderDAO() {
-    }
 
     private Connection con;
     private PreparedStatement stm;
@@ -99,6 +98,60 @@ public class OrderDAO implements Serializable {
                 String name = rs.getString("name");
                 boolean paymentstatus = rs.getBoolean("paymentStatus");
                 result = new OrderDTO(orderId, userId, total, phone, address, date, payment, name, paymentstatus);
+            }
+        } finally {
+            closeConnection();
+        }
+        return result;
+    }
+
+    public List<OrderDTO> getUserOrder(String userId, int currentPage, int rowPerPage) throws SQLException, ClassNotFoundException, NamingException {
+        List<OrderDTO> result = null;
+        try {
+            String sql = "SELECT orderId, total, date, phone, address, payment, name, paymentStatus "
+                    + "FROM tblOrder "
+                    + "WHERE userId = ? "
+                    + "ORDER BY date DESC "
+                    + "OFFSET ? * ? ROWS "
+                    + "FETCH NEXT ? ROWS ONLY ";
+            con = DBUtil.getConnection();
+            stm = con.prepareStatement(sql);
+            stm.setString(1, userId);
+            stm.setInt(2, currentPage - 1);
+            stm.setInt(3, rowPerPage);
+            stm.setInt(4, rowPerPage);
+            rs = stm.executeQuery();
+            while (rs.next()) {
+                if (result == null) {
+                    result = new ArrayList<>();
+                }
+                String orderId = rs.getString("orderId");
+                int total = rs.getInt("total");
+                Timestamp date = rs.getTimestamp("date");
+                String phone = rs.getString("phone");
+                String address = rs.getString("address");
+                String payment = rs.getString("payment");
+                String name = rs.getString("name");
+                boolean paymentstatus = rs.getBoolean("paymentStatus");
+                result.add(new OrderDTO(orderId, userId, total, phone, address, date, payment, name, paymentstatus));
+            }
+        } finally {
+            closeConnection();
+        }
+        return result;
+    }
+    
+    public int countUserOrder(String userId) throws SQLException, ClassNotFoundException, NamingException {
+        int result = 0;
+        try {
+            String sql = "SELECT COUNT(orderId) as NumberOfOrder "
+                    + "FROM tblOrder WHERE userId = ?";
+            con = DBUtil.getConnection();
+            stm = con.prepareStatement(sql);
+            stm.setString(1, userId);
+            rs = stm.executeQuery();
+            if (rs.next()) {
+                result = rs.getInt("NumberofOrder");
             }
         } finally {
             closeConnection();

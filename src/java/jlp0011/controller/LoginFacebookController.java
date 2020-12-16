@@ -51,18 +51,21 @@ public class LoginFacebookController extends HttpServlet {
             UserDAO dao = new UserDAO();
             HttpSession session = request.getSession();
             try {
-                String code = request.getParameter("code");
-                String accessToken = wapper.getAccessToken(code);
-                wapper.setAccessToken(accessToken);
-                UserDTO userDto = wapper.getAccountInfo();
-                userDto.setUserId(userDto.getFacebookId());
-                userDto.setRoleId(USER_ROLE);
-                userDto.setName(DataTypeConverter.convertVietnamese(userDto.getName()));
-                boolean userExisted = dao.checkFBLogin(userDto.getFacebookId()) != null;
-                if (!userExisted) {
-                    dao.register(userDto);
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    String code = request.getParameter("code");
+                    String accessToken = wapper.getAccessToken(code);
+                    wapper.setAccessToken(accessToken);
+                    UserDTO userDto = wapper.getAccountInfo();
+                    userDto.setUserId(userDto.getFacebookId());
+                    userDto.setRoleId(USER_ROLE);
+                    userDto.setName(DataTypeConverter.convertVietnamese(userDto.getName()));
+                    boolean userExisted = dao.checkFBLogin(userDto.getFacebookId()) != null;
+                    if (!userExisted) {
+                        dao.register(userDto);
+                    }
+                    session.setAttribute("user", userDto);
                 }
-                session.setAttribute("User", userDto);
                 url = SUCCESS;
             } catch (SQLException | NamingException | ClassNotFoundException e) {
                 LOG.error(e.toString());

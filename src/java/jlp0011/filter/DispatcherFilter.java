@@ -9,104 +9,37 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author DELL
  */
-public class AuthFilter implements Filter {
+public class DispatcherFilter implements Filter {
 
-    private static final Logger LOG = Logger.getLogger(AuthFilter.class);
     private static final boolean debug = true;
 
-    private final List<String> guest;
-    private final List<String> member;
-    private final List<String> admin;
-    private final String ERROR_PAGE = "error.jsp";
-    private final String SEARCH_PAGE = "search.jsp";
-    private final String LOAD_CATE = "LoadCategoryController";
-    private final int ADMIN_ROLE = 1;
-    private final int USER_ROLE = 2;
     // The filter configuration object we are associated with.  If
     // this value is null, this filter instance is not currently
     // configured. 
     private FilterConfig filterConfig = null;
+    private static final Logger LOG = Logger.getLogger(DispatcherFilter.class);
+    private final String LOAD_CATE = "LoadCategoryController";
 
-    public AuthFilter() {
-        guest = new ArrayList<>();
-        guest.add("login.jsp");
-        guest.add("register.jsp");
-        guest.add("error.jsp");
-        guest.add("search.jsp");
-        guest.add("LoginController");
-        guest.add("LoadCategoryController");
-        guest.add("LoginFacebookController");
-        guest.add("SearchCakeController");
-        guest.add("cart.jsp");
-        guest.add("CartController");
-        guest.add("AddToCartController");
-        guest.add("CartController");
-        guest.add("UpdateCartController");
-        guest.add("RemoveCartItemController");
-        guest.add("CheckOutController");
-        guest.add("ProccessPaymentController");
-        guest.add("confirm.jsp");
-
-        member = new ArrayList<>();
-        member.add("error.jsp");
-        member.add("search.jsp");
-        member.add("LoadCategoryController");
-        member.add("LogoutController");
-        member.add("SearchCakeController");
-        member.add("cart.jsp");
-        member.add("CartController");
-        member.add("AddToCartController");
-        member.add("CartController");
-        member.add("UpdateCartController");
-        member.add("RemoveCartItemController");
-        member.add("CheckOutController");
-        member.add("ProccessPaymentController");
-        member.add("confirm.jsp");
-        member.add("searchOrder.jsp");
-        member.add("SearchOrderController");
-
-        admin = new ArrayList<>();
-        admin.add("error.jsp");
-        admin.add("search.jsp");
-        admin.add("LogoutController");
-        admin.add("listCake.jsp");
-        admin.add("ListAllCakeController");
-        admin.add("ListAllCategoryController");
-        admin.add("listCategory.jsp");
-        admin.add("UpdateCategoryController");
-        admin.add("CreateCategoryController");
-        admin.add("CreateCakeController");
-        admin.add("createCake.jsp");
-        admin.add("LoadCategoryController");
-        admin.add("UpdateCakeController");
-        admin.add("updateCake.jsp");
-        admin.add("SearchCakeController");
-        admin.add("ListLogController");
-        admin.add("viewLog.jsp");
+    public DispatcherFilter() {
     }
 
     private void doBeforeProcessing(ServletRequest request, ServletResponse response)
             throws IOException, ServletException {
         if (debug) {
-            log("AuthFilter:DoBeforeProcessing");
+            log("DispatcherFilter:DoBeforeProcessing");
         }
 
         // Write code here to process the request and/or response before
@@ -134,7 +67,7 @@ public class AuthFilter implements Filter {
     private void doAfterProcessing(ServletRequest request, ServletResponse response)
             throws IOException, ServletException {
         if (debug) {
-            log("AuthFilter:DoAfterProcessing");
+            log("DispatcherFilter:DoAfterProcessing");
         }
 
         // Write code here to process the request and/or response after
@@ -168,49 +101,22 @@ public class AuthFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
             FilterChain chain)
             throws IOException, ServletException {
+        HttpServletRequest req = (HttpServletRequest) request;
+        String uri = req.getRequestURI();
+        String url = LOAD_CATE;
         try {
-            HttpServletRequest req = (HttpServletRequest) request;
+            int index = uri.lastIndexOf("/");
+            String resource = uri.substring(index + 1);
 
-            String url = LOAD_CATE;
-            String uri = req.getRequestURI();
-            int lastIndex = uri.lastIndexOf("/");
-            String resources = uri.substring(lastIndex + 1);
-            HttpSession session = req.getSession(false);
-          if(session == null){
-              resources = LOAD_CATE;
-          }else{
-            if ( session.getAttribute("User") == null || session.getAttribute("ListCategory") == null) {
-                //not login
-                if (guest.contains(resources)) {
-                    chain.doFilter(request, response);
-                    return;
-                } else {
-                    resources = ERROR_PAGE;
-                }
-            } else {
-                //login
-                UserDTO user = (UserDTO) session.getAttribute("User");
-                if ((user.getRoleId() == ADMIN_ROLE && admin.contains(resources))
-                        || ((user.getRoleId() == USER_ROLE && member.contains(resources)))) {
-                    chain.doFilter(request, response);
-                    return;
-                } else {
-                    if (resources.equals("")) {
-                        resources = SEARCH_PAGE;
-                    } else {
-                        resources = ERROR_PAGE;
-                    }
-                }
-                if (resources.equals("")) {
-                    resources = SEARCH_PAGE;
-                } else {
-                    resources = ERROR_PAGE;
+            if (resource.length() > 0) {
+                url = resource.substring(0, 1).toUpperCase() + resource.substring(1) + "Controller";
+                if (resource.lastIndexOf(".html") > 0 || resource.lastIndexOf(".jsp") > 0 || resource.lastIndexOf(".jpg") > 0 || resource.lastIndexOf(".png") > 0 || resource.lastIndexOf(".jpeg") > 0) {
+                    LOG.info(resource);
+                    url = resource;
                 }
             }
-          }
-            RequestDispatcher rd = request.getRequestDispatcher(url);
-            rd.forward(request, response);
-        } catch (Exception e) {
+            req.getRequestDispatcher(url).forward(request, response);
+        } catch (IOException | ServletException e) {
             LOG.error(e.toString());
         }
     }
@@ -244,7 +150,7 @@ public class AuthFilter implements Filter {
         this.filterConfig = filterConfig;
         if (filterConfig != null) {
             if (debug) {
-                log("AuthFilter:Initializing filter");
+                log("DispatcherFilter:Initializing filter");
             }
         }
     }
@@ -255,9 +161,9 @@ public class AuthFilter implements Filter {
     @Override
     public String toString() {
         if (filterConfig == null) {
-            return ("AuthFilter()");
+            return ("DispatcherFilter()");
         }
-        StringBuffer sb = new StringBuffer("AuthFilter(");
+        StringBuffer sb = new StringBuffer("DispatcherFilter(");
         sb.append(filterConfig);
         sb.append(")");
         return (sb.toString());

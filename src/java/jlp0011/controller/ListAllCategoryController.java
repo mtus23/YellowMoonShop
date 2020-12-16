@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import jlp0011.dao.CategoryDAO;
 import jlp0011.dto.CategoryDTO;
+import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -29,7 +30,9 @@ public class ListAllCategoryController extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(ListAllCategoryController.class);
     private final String ERROR = "error.jsp";
     private final String LIST_RESULT = "listCategory.jsp";
-
+    private final String SEARCH = "search.jsp";
+    private final int ROWS_PER_PAGE = 20;
+    private final String LOGIN ="login.jsp";
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -48,16 +51,35 @@ public class ListAllCategoryController extends HttpServlet {
             CategoryDAO dao = new CategoryDAO();
             HttpSession session = request.getSession();
             try {
-                List<CategoryDTO> listCate = dao.getAll();
-                if (listCate == null) {
-                    request.setAttribute("ListAllCateError", "List category is empty");
-                } else {
-                    if (session.getAttribute("ListCategory") != null) {
-                        session.removeAttribute("ListCategory");
-                    }
-                    session.setAttribute("ListCategory", listCate);
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
                 }
-                url = LIST_RESULT;
+                else if (user.getRoleId() == 1) {
+                    String page = request.getParameter("txtCurrentPage");
+                    int currentPage = 1;
+                    if (page != null) {
+                        currentPage = Integer.parseInt(page);
+                    }
+                    int numOfCate = dao.countCategory();
+                    int numOfPage = (int) (Math.ceil((numOfCate * 1.0) / ROWS_PER_PAGE));
+                    if (currentPage > numOfPage || currentPage <= 0) {
+                        currentPage = 1;
+                    }
+                    List<CategoryDTO> listCate = dao.getAll(currentPage, ROWS_PER_PAGE);
+                    if (listCate == null) {
+                        request.setAttribute("listAllCateError", "List category is empty");
+                    } else {
+                        request.setAttribute("listAllCate", listCate);
+                        request.setAttribute("currentPage", currentPage);
+                        request.setAttribute("numberOfPage", numOfPage);
+                    }
+                    url = LIST_RESULT;
+                } else {
+                    request.setAttribute("noRight", "View list category fail");
+                    url = SEARCH;
+                }
             } catch (NamingException | SQLException | ClassNotFoundException e) {
                 LOG.error(e.toString());
             } finally {

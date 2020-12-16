@@ -5,13 +5,14 @@
  */
 package jlp0011.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
-import java.sql.SQLException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import javax.naming.NamingException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -23,7 +24,10 @@ import jlp0011.dao.ProductDAO;
 import jlp0011.dto.LogDTO;
 import jlp0011.dto.ProductDTO;
 import jlp0011.dto.UserDTO;
-import jlp0011.util.ValidImage;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
 /**
@@ -44,6 +48,8 @@ public class UpdateCakeController extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(UpdateCakeController.class);
     private final String ERROR = "updateCake.jsp";
     private final String SUCCESS = "ListAllCakeController";
+    private final String SEARCH = "search.jsp";
+    private final String LOGIN = "login.jsp";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -51,56 +57,78 @@ public class UpdateCakeController extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
             String url = ERROR;
-            boolean check = true;
             ProductDAO proDao = new ProductDAO();
             LogDAO logDao = new LogDAO();
             HttpSession session = request.getSession();
             try {
-                String proId = request.getParameter("txtProductId");
-                String name = request.getParameter("txtProductName");
-                String imageLink = request.getParameter("txtImage");
-                String des = request.getParameter("txtDescription");
-                String price = request.getParameter("txtPrice");
-                String quantity = request.getParameter("txtQuantity");
-                String creDate = request.getParameter("txtCreateDate");
-                String expDate = request.getParameter("txtExpirationDate");
-                String cateId = request.getParameter("cboCategory");
-                String cbStatus = request.getParameter("cbStatus");
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
+                } else if (user.getRoleId() == 1) {
+                    boolean isMultiPart = ServletFileUpload.isMultipartContent(request);
+                    if (isMultiPart) {
+                        String imageName = null;
+                        FileItemFactory factory = new DiskFileItemFactory();
+                        ServletFileUpload upload = new ServletFileUpload(factory);
+                        HashMap params = new HashMap();
+                        List items = upload.parseRequest(request);
+                        Iterator iter = items.iterator();
+                        while (iter.hasNext()) {
+                            FileItem item = (FileItem) iter.next();
+                            if (item.isFormField()) {
+                                params.put(item.getFieldName(), item.getString());
+                            } else {
+                                String itemName = item.getName();
+                                imageName = itemName.substring(
+                                        itemName.lastIndexOf("\\") + 1);
+                                if (!proDao.checkImage(imageName)) {
+                                    String RealPath = getServletContext().getRealPath("/")
+                                            + "images\\" + imageName;
+                                    File savedFile = new File(RealPath);
+                                    item.write(savedFile);
+                                }
+                            }
+                        }
+                        String proId = (String) params.get("txtProductId");
+                        String name = (String) params.get("txtProductName");
+                        String des = (String) params.get("txtDescription");
+                        String price = (String) params.get("txtPrice");
+                        String quantity = (String) params.get("txtQuantity");
+                        String creDate = (String) params.get("txtCreateDate");
+                        String expDate = (String) params.get("txtExpirationDate");
+                        String cateId = (String) params.get("cboCategory");
+                        String cbStatus = (String) params.get("cbStatus");
+                        boolean status = true;
 
-                boolean status = true;
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                Date createDate = new java.sql.Date((format.parse(creDate).getTime()));
-                Date expirationDate = new java.sql.Date((format.parse(expDate).getTime()));
-                if (!(expirationDate.compareTo(createDate) > 0)) {
-                    request.setAttribute("ErrorDate", "Expiration date must be after create date");
-                    check = false;
-                }
-                boolean imagecheck = ValidImage.isImageExist(imageLink);
-                if (!imagecheck) {
-                    request.setAttribute("ErrorImage", "Cant find image");
-                    check = false;
-                }
-                if (check) {
-                    if (cbStatus == null) {
-                        status = false;
+                        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                        Date expirationDate = new java.sql.Date((format.parse(expDate).getTime()));
+                        Date createDate = new java.sql.Date((format.parse(creDate).getTime()));
+                        if (cbStatus == null) {
+                            status = false;
+                        }
+                        int productId = Integer.parseInt(proId);
+                        int numPrice = Integer.parseInt(price);
+                        int numQuantity = Integer.parseInt(quantity);
+                        int numCateId = Integer.parseInt(cateId);
+                        ProductDTO pro = new ProductDTO(productId, name, des, numPrice, numQuantity, numCateId, createDate, expirationDate, imageName, status);
+                        proDao.updateProduct(pro);
+                        LogDTO latProLog = logDao.findLastProductLog(productId);
+                        if (latProLog != null) {
+                            logDao.updateProductLog(latProLog);
+                        }
+                        Date currentDate = new Date(System.currentTimeMillis());
+                        LogDTO newLog = new LogDTO(user.getUserId(), productId, currentDate);
+                        logDao.addProductLog(newLog);
+                        url = SUCCESS;
+                        request.setAttribute("updateSuccess", "Update cake Success");
                     }
-                    int productId = Integer.parseInt(proId);
-                    int numPrice = Integer.parseInt(price);
-                    int numQuantity = Integer.parseInt(quantity);
-                    int numCateId = Integer.parseInt(cateId);
-                    ProductDTO pro = new ProductDTO(productId, name, des, numPrice, numQuantity, numCateId, createDate, expirationDate, imageLink, status);
-                    proDao.updateProduct(pro);
-                    LogDTO latProLog = logDao.findLastProductLog(productId);
-                    if (latProLog != null) {
-                        logDao.updateProductLog(latProLog);
-                    }
-                    Date currentDate = new Date(System.currentTimeMillis());
-                    UserDTO user = (UserDTO) session.getAttribute("User");
-                    LogDTO newLog = new LogDTO(user.getUserId(), productId, currentDate);
-                    logDao.addProductLog(newLog);
-                    url = SUCCESS;
+                } else {
+                    request.setAttribute("noRight", "Update cake fail");
+
+                    url = SEARCH;
                 }
-            } catch (ParseException | SQLException | NamingException | ClassNotFoundException e) {
+            } catch (Exception e) {
                 LOG.error(e.toString());
             } finally {
                 RequestDispatcher rd = request.getRequestDispatcher(url);

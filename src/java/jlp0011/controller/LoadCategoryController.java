@@ -49,10 +49,10 @@ public class LoadCategoryController extends HttpServlet {
             HttpSession session = request.getSession();
             try {
                 List<CategoryDTO> listCate = dao.getAll();
-                if (session.getAttribute("ListCategory") != null) {
-                    session.removeAttribute("ListCategory");
+                if (session.getAttribute("listCategory") != null) {
+                    session.removeAttribute("listCategory");
                 }
-                session.setAttribute("ListCategory", listCate);
+                session.setAttribute("listCategory", listCate);
                 url = SEARCH_PAGE;
             } catch (NamingException | SQLException | ClassNotFoundException e) {
                 LOG.error(e.toString());

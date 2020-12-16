@@ -17,10 +17,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import jlp0011.dao.LogDAO;
 import jlp0011.dao.ProductDAO;
 import jlp0011.dao.UserDAO;
 import jlp0011.dto.LogDTO;
+import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -40,6 +42,10 @@ public class ListLogController extends HttpServlet {
      */
     private static final Logger LOG = Logger.getLogger(ListLogController.class);
     private final String LIST_RESULT = "viewLog.jsp";
+    private final String SEARCH = "search.jsp";
+    private final int ROWS_PER_PAGE = 20;
+    private final String LOGIN = "login.jsp";
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -49,24 +55,47 @@ public class ListLogController extends HttpServlet {
             LogDAO logDao = new LogDAO();
             ProductDAO proDao = new ProductDAO();
             UserDAO userDao = new UserDAO();
+            HttpSession session = request.getSession();
             try {
-                List<LogDTO> listLog = logDao.getAll();
-                if (listLog == null) {
-                    request.setAttribute("ListAllLogError", "List log is empty");
-                } else {
-                    Map<Integer, String> mapProName = new HashMap<>();
-                    Map<String, String> mapUserName = new HashMap<>();
-                    for(LogDTO log : listLog){
-                        String userName = userDao.getUserName(log.getUserId());
-                        mapUserName.put(log.getUserId(), userName);
-                        String proName = proDao.getProduct(log.getProductId()).getName();
-                        mapProName.put(log.getProductId(), proName);
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
+                } else if (user.getRoleId() == 1) {
+                    String page = request.getParameter("txtCurrentPage");
+                    int currentPage = 1;
+                    if (page != null) {
+                        currentPage = Integer.parseInt(page);
                     }
-                    request.setAttribute("MapProductName", mapProName);
-                    request.setAttribute("MapUserName", mapUserName);
-                    request.setAttribute("ListLog", listLog);
+                    int numOfLog = logDao.countLog();
+                    int numOfPage = (int) (Math.ceil((numOfLog * 1.0) / ROWS_PER_PAGE));
+                    if (currentPage > numOfPage || currentPage <= 0) {
+                        currentPage = 1;
+                    }
+                    List<LogDTO> listLog = logDao.getAll(currentPage, ROWS_PER_PAGE);
+                    if (listLog == null) {
+                        request.setAttribute("listAllLogError", "List log is empty");
+                    } else {
+                        Map<Integer, String> mapProName = new HashMap<>();
+                        Map<String, String> mapUserName = new HashMap<>();
+                        for (LogDTO log : listLog) {
+                            String userName = userDao.getUserName(log.getUserId());
+                            mapUserName.put(log.getUserId(), userName);
+                            String proName = proDao.getProduct(log.getProductId()).getName();
+                            mapProName.put(log.getProductId(), proName);
+                        }
+                        request.setAttribute("mapProductName", mapProName);
+                        request.setAttribute("mapUserName", mapUserName);
+                        request.setAttribute("listLog", listLog);
+                        request.setAttribute("currentPage", currentPage);
+                        request.setAttribute("numberOfPage", numOfPage);
+                    }
+                    url = LIST_RESULT;
+                } else {
+                    request.setAttribute("noRight", "View log fail");
+
+                    url = SEARCH;
                 }
-                url = LIST_RESULT;
             } catch (NamingException | SQLException | ClassNotFoundException e) {
                 LOG.error(e.toString());
             } finally {

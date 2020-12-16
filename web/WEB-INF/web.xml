@@ -5,11 +5,11 @@
         <param-value>WEB-INF/log4j.properties</param-value>
     </context-param>
     <filter>
-        <filter-name>AuthFilter</filter-name>
-        <filter-class>jlp0011.filter.AuthFilter</filter-class>
+        <filter-name>DispatcherFilter</filter-name>
+        <filter-class>jlp0011.filter.DispatcherFilter</filter-class>
     </filter>
     <filter-mapping>
-        <filter-name>AuthFilter</filter-name>
+        <filter-name>DispatcherFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
     <servlet>
@@ -88,6 +88,10 @@
         <servlet-name>ListLogController</servlet-name>
         <servlet-class>jlp0011.controller.ListLogController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ListOrderHistoryController</servlet-name>
+        <servlet-class>jlp0011.controller.ListOrderHistoryController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginController</servlet-name>
         <url-pattern>/LoginController</url-pattern>
@@ -163,6 +167,10 @@
     <servlet-mapping>
         <servlet-name>ListLogController</servlet-name>
         <url-pattern>/ListLogController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ListOrderHistoryController</servlet-name>
+        <url-pattern>/ListOrderHistoryController</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

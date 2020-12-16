@@ -47,6 +47,7 @@ public class ProccessPaymentController extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(ProccessPaymentController.class);
     private final String CONFIRM_PAGE = "confirm.jsp";
     private final String ERROR = "cart.jsp";
+    private final String SEARCH = "search.jsp";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -60,61 +61,66 @@ public class ProccessPaymentController extends HttpServlet {
 
             try {
                 HttpSession session = request.getSession();
-                UserDTO user = (UserDTO) session.getAttribute("User");
-                Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-                OrderDTO order = null;
-                List<String> error = null;
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (!(user != null && user.getRoleId() == 1)) {
+                    Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+                    OrderDTO order;
+                    List<String> error = null;
 
-                boolean lastCheck = true;
-                OrderDAO orderDao = new OrderDAO();
-                OrderDetailDAO orderDetailDao = new OrderDetailDAO();
-                ProductDAO proDao = new ProductDAO();
+                    boolean lastCheck = true;
+                    OrderDAO orderDao = new OrderDAO();
+                    OrderDetailDAO orderDetailDao = new OrderDetailDAO();
+                    ProductDAO proDao = new ProductDAO();
 
-                CartDTO cart = (CartDTO) session.getAttribute("Cart");
-                if (cart != null) {
-                    Map<ProductDTO, Integer> list = cart.getItems();
-                    if (list != null) {
-                        for (ProductDTO pro : list.keySet()) {
-                            if (list.get(pro) > proDao.getProduct(pro.getProductId()).getQuantity()) {
-                                lastCheck = false;
-                                if (error == null) {
-                                    error = new ArrayList<>();
+                    CartDTO cart = (CartDTO) session.getAttribute("cart");
+                    if (cart.getItems() != null) {
+                        Map<ProductDTO, Integer> list = cart.getItems();
+                        if (list != null) {
+                            for (ProductDTO pro : list.keySet()) {
+                                if (list.get(pro) > proDao.getProduct(pro.getProductId()).getQuantity()) {
+                                    lastCheck = false;
+                                    if (error == null) {
+                                        error = new ArrayList<>();
+                                    }
+                                    error.add("There 're not enough cake " + pro.getName() + " in stock <br>");
                                 }
-                                error.add("There 're not enough cake " + pro.getName() + " in stock");
                             }
-                        }
-                        if (lastCheck) {
-                            int total = cart.getTotalPrice();
-                            if (user != null) {
-                                order = new OrderDTO(user.getUserId(), total, customerPhone, customerAddress, currentTime, customerName);
+                            if (lastCheck) {
+                                int total = cart.getTotalPrice();
+                                if (user != null) {
+                                    order = new OrderDTO(user.getUserId(), total, customerPhone, customerAddress, currentTime, customerName);
+                                } else {
+                                    order = new OrderDTO(total, customerPhone, customerAddress, currentTime, customerName);
+                                }
+                                boolean check = orderDao.addOrder(order);
+                                if (check) {
+                                    String orderId = orderDao.getLastOrderId();
+                                    for (ProductDTO pro : list.keySet()) {
+                                        int proId = pro.getProductId();
+                                        int quantity = list.get(pro);
+                                        OrderDetailDTO orderDetailDto = new OrderDetailDTO(orderId, proId, pro.getPrice(), quantity);
+                                        orderDetailDao.addOrderDetail(orderDetailDto);
+
+                                        ProductDTO product = proDao.getProduct(proId);
+                                        int currQuantity = product.getQuantity();
+                                        product.setQuantity(currQuantity - quantity);
+                                        proDao.updateProduct(product);
+                                    }
+                                    cart.clearCart();
+                                    session.removeAttribute("cart");
+                                    session.removeAttribute("totalBill");
+                                    request.setAttribute("addSuccess", "Checkout successfully");
+                                    request.setAttribute("orderId", orderId);
+                                    url = CONFIRM_PAGE;
+                                }
                             } else {
-                                order = new OrderDTO(total, customerPhone, customerAddress, currentTime, customerName);
+                                request.setAttribute("outOfBoundCakeError", error);
                             }
-                            boolean check = orderDao.addOrder(order);
-                            if (check) {
-                                String orderId = orderDao.getLastOrderId();
-                                for (ProductDTO pro : list.keySet()) {
-                                    int proId = pro.getProductId();
-                                    int quantity = list.get(pro);
-                                    OrderDetailDTO orderDetailDto = new OrderDetailDTO(orderId, proId, pro.getPrice(), quantity);
-                                    orderDetailDao.addOrderDetail(orderDetailDto);
-
-                                    ProductDTO product = proDao.getProduct(proId);
-                                    int currQuantity = product.getQuantity();
-                                    product.setQuantity(currQuantity - quantity);
-                                    proDao.updateProduct(product);
-                                }
-                                cart.clearCart();
-                                session.removeAttribute("Cart");
-                                session.removeAttribute("TotalBill");
-                                request.setAttribute("AddSuccess", "Checkout successfully");
-                                request.setAttribute("OrderId", orderId);
-                                url = CONFIRM_PAGE;
-                            }
-                        } else {
-                            request.setAttribute("OutOfBoundCakeError", error);
                         }
                     }
+                } else {
+                    request.setAttribute("ShoppingFail", "Shopping fail");
+                    url = SEARCH;
                 }
             } catch (SQLException | ClassNotFoundException | NamingException e) {
                 LOG.error(e.toString());

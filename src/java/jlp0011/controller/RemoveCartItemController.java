@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import jlp0011.dto.CartDTO;
+import jlp0011.dto.UserDTO;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -32,6 +34,8 @@ public class RemoveCartItemController extends HttpServlet {
      */
     private final String CART_PAGE = "cart.jsp";
     private final String ERROR = "error.jsp";
+    private final String SEARCH = "search.jsp";
+    private static final Logger LOG = Logger.getLogger(RemoveCartItemController.class);
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -40,10 +44,11 @@ public class RemoveCartItemController extends HttpServlet {
             /* TODO output your page here. You may use following sample code. */
             String url = ERROR;
             try {
-                HttpSession session = request.getSession(false);
-                if (session != null) {
-                    CartDTO cart = (CartDTO) session.getAttribute("Cart");
-                    if (cart != null) {
+                HttpSession session = request.getSession();
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (!(user != null && user.getRoleId() == 1)) {
+                    CartDTO cart = (CartDTO) session.getAttribute("cart");
+                    if (cart.getItems() != null) {
                         String[] items = request.getParameterValues("cbItem");
                         int total = 0;
                         if (items != null) {
@@ -52,12 +57,18 @@ public class RemoveCartItemController extends HttpServlet {
                                 cart.removeProductFromCart(proId);
                             }
                             total = cart.getTotalPrice();
-                            session.setAttribute("TotalBill", total);
-                            session.setAttribute("Cart", cart);
+                            session.setAttribute("totalBill", total);
+                            session.setAttribute("cart", cart);
+                            request.setAttribute("removeCartSuccess", "Remove Cake from cart success");
                         }
                     }
+                    url = CART_PAGE;
+                } else {
+                    url = SEARCH;
+                    request.setAttribute("RemoveFail", "Remove cake form cart fail");
                 }
-                url = CART_PAGE;
+            } catch (NumberFormatException e) {
+                LOG.error(e.toString());
             } finally {
                 RequestDispatcher rd = request.getRequestDispatcher(url);
                 rd.forward(request, response);

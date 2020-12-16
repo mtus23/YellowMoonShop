@@ -14,8 +14,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import jlp0011.dao.CategoryDAO;
 import jlp0011.dto.CategoryDTO;
+import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -36,6 +38,8 @@ public class UpdateCategoryController extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(UpdateCategoryController.class);
     private final String ERROR = "listCategory.jsp";
     private final String LOAD_LIST = "ListAllCategoryController";
+    private final String SEARCH = "search.jsp";
+    private final String LOGIN = "login.jsp";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -44,16 +48,26 @@ public class UpdateCategoryController extends HttpServlet {
             /* TODO output your page here. You may use following sample code. */
             String url = ERROR;
             CategoryDAO dao = new CategoryDAO();
+            HttpSession session = request.getSession();
             try {
-                String name = request.getParameter("txtCategoryName");
-                int cateId = Integer.parseInt(request.getParameter("txtCategoryId"));
-                boolean check = dao.checkDuplicatedName(name);
-                if (check) {
-                    request.setAttribute("UpdateCategoryError", "Category name is Existed");
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
+                } else if (user.getRoleId() == 1) {
+                    String name = request.getParameter("txtCategoryName");
+                    int cateId = Integer.parseInt(request.getParameter("txtCategoryId"));
+                    boolean check = dao.checkDuplicatedName(name);
+                    if (check) {
+                        request.setAttribute("updateCategoryError", "Category name is Existed");
+                    } else {
+                        CategoryDTO cate = new CategoryDTO(cateId, name);
+                        dao.updateCategory(cate);
+                        url = LOAD_LIST;
+                    }
                 } else {
-                    CategoryDTO cate = new CategoryDTO(cateId, name);
-                    dao.updateCategory(cate);
-                    url = LOAD_LIST;
+                    request.setAttribute("noRight","update category fail");
+                    url = SEARCH;
                 }
             } catch (NamingException | SQLException | ClassNotFoundException e) {
 

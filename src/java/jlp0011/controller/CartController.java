@@ -12,6 +12,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import jlp0011.dto.UserDTO;
 
 /**
  *
@@ -31,6 +33,7 @@ public class CartController extends HttpServlet {
     private final String ERROR = "error.jsp";
     private final String REMOVE_ITEMS_CONTROLLER = "RemoveCartItemController";
     private final String UPDATE_ITEMS_CONTROLLER = "UpdateCartController";
+    private final String SEARCH = "search.jsp";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -38,12 +41,19 @@ public class CartController extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
             String url = ERROR;
-            String btn = request.getParameter("btnAction");
+            HttpSession session = request.getSession();
             try {
-                if (btn.equals("Update selected products")) {
-                    url = UPDATE_ITEMS_CONTROLLER;
-                } else if (btn.equals("Remove selected products")) {
-                    url = REMOVE_ITEMS_CONTROLLER;
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (!(user != null && user.getRoleId() == 1)) {
+                    String btn = request.getParameter("btnAction");
+                    if (btn.equals("Update selected products")) {
+                        url = UPDATE_ITEMS_CONTROLLER;
+                    } else if (btn.equals("Remove selected products")) {
+                        url = REMOVE_ITEMS_CONTROLLER;
+                    }
+                } else {
+                    request.setAttribute("noRight", "Please login as user to shopping");
+                    url = SEARCH;
                 }
             } finally {
                 RequestDispatcher rd = request.getRequestDispatcher(url);

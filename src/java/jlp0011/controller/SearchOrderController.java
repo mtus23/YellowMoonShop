@@ -25,6 +25,7 @@ import jlp0011.dto.OrderDTO;
 import jlp0011.dto.OrderDetailDTO;
 import jlp0011.dto.ProductDTO;
 import jlp0011.dto.UserDTO;
+import jlp0011.util.ValidUUID;
 import org.apache.log4j.Logger;
 
 /**
@@ -45,6 +46,8 @@ public class SearchOrderController extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(SearchOrderController.class);
     private final String SEARCH_RESULT = "searchOrder.jsp";
     private final String ERROR = "error.jsp";
+    private final String SEARCH = "search.jsp";
+    private final String LOGIN = "login.jsp";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -58,26 +61,36 @@ public class SearchOrderController extends HttpServlet {
             ProductDAO productDao = new ProductDAO();
             HttpSession session = request.getSession();
             try {
-                UserDTO user = (UserDTO) session.getAttribute("User");
-                if (user != null) {
-                    OrderDTO orderDto = orderDao.searchOrder(search, user.getUserId());
-                    if (orderDto != null) {
-                        List<OrderDetailDTO> proList = orderDetailDao.searchOrder(orderDto.getOrderId());
-                        if (proList != null) {
-                            Map<Integer, String> proNameList = new HashMap<>();
-                            for (OrderDetailDTO od : proList) {
-                                ProductDTO pro = productDao.getProduct(od.getProductId());
-                                proNameList.put(pro.getProductId(), pro.getName());
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
+                }
+                else if (user.getRoleId() == 2) {
+                    if (ValidUUID.isUUID(search)) {
+                        OrderDTO orderDto = orderDao.searchOrder(search, user.getUserId());
+                        if (orderDto != null) {
+                            List<OrderDetailDTO> proList = orderDetailDao.searchOrder(orderDto.getOrderId());
+                            if (proList != null) {
+                                Map<Integer, String> proNameList = new HashMap<>();
+                                for (OrderDetailDTO od : proList) {
+                                    ProductDTO pro = productDao.getProduct(od.getProductId());
+                                    proNameList.put(pro.getProductId(), pro.getName());
+                                }
+                                request.setAttribute("orderFound", orderDto);
+                                request.setAttribute("listOrderDetail", proList);
+                                request.setAttribute("mapProductName", proNameList);
                             }
-                            request.setAttribute("OrderFound", orderDto);
-                            request.setAttribute("ListOrderDetail", proList);
-                            request.setAttribute("MapProductName", proNameList);
+                        } else {
+                            request.setAttribute("orderSearchError", "Order not found");
                         }
                     } else {
-                        request.setAttribute("OrderSearchError", "Order not found");
-
+                        request.setAttribute("orderSearchError", "Order id invalid");
                     }
                     url = SEARCH_RESULT;
+                } else {
+                    request.setAttribute("noRight", "Search Order fail");
+                    url = SEARCH;
                 }
             } catch (SQLException | NamingException | ClassNotFoundException e) {
                 LOG.error(e.toString());

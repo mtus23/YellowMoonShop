@@ -20,6 +20,7 @@ import jlp0011.dao.CategoryDAO;
 import jlp0011.dao.ProductDAO;
 import jlp0011.dto.CategoryDTO;
 import jlp0011.dto.ProductDTO;
+import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -32,7 +33,8 @@ public class ListAllCakeController extends HttpServlet {
     private final String LIST_RESULT = "listCake.jsp";
     private final String ERROR = "error.jsp";
     private final int ROWS_PER_PAGE = 20;
-
+    private final String SEARCH = "search.jsp";
+    private final String LOGIN ="login.jsp";
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -52,30 +54,41 @@ public class ListAllCakeController extends HttpServlet {
             CategoryDAO cateDao = new CategoryDAO();
             HttpSession session = request.getSession();
             try {
-                String page = request.getParameter("txtCurrentPage");
-                int currentPage = 1;
-                if (page != null) {
-                    currentPage = Integer.parseInt(page);
+                UserDTO user = (UserDTO) session.getAttribute("user");
+                if (user == null) {
+                    request.setAttribute("userNotAuthenticated", "Please login first");
+                    url = LOGIN;
                 }
-                int numOfCake = dao.countCakeInShop();
-                int numOfPage = (int) (Math.ceil((numOfCake * 1.0) / ROWS_PER_PAGE));
-                if (currentPage > numOfPage || currentPage <= 0) {
-                    currentPage = 1;
+                else if (user.getRoleId() == 1) {
+                    String page = request.getParameter("txtCurrentPage");
+                    int currentPage = 1;
+                    if (page != null) {
+                        currentPage = Integer.parseInt(page);
+                    }
+                    int numOfCake = dao.countCakeInShop();
+                    int numOfPage = (int) (Math.ceil((numOfCake * 1.0) / ROWS_PER_PAGE));
+                    if (currentPage > numOfPage || currentPage <= 0) {
+                        currentPage = 1;
+                    }
+                    List<CategoryDTO> listCate = cateDao.getAll();
+                    if (session.getAttribute("listCategory") != null) {
+                        session.removeAttribute("listCategory");
+                    }
+                    session.setAttribute("listCategory", listCate);
+                    List<ProductDTO> result = dao.getAllProduct(currentPage, ROWS_PER_PAGE);
+                    if (result == null) {
+                        request.setAttribute("listCakeEmptyError", "List Cake is Empty");
+                    } else {
+                        request.setAttribute("listCakeResult", result);
+                        request.setAttribute("currentPage", currentPage);
+                        request.setAttribute("numberOfPage", numOfPage);
+                    }
+                    url = LIST_RESULT;
                 }
-                List<CategoryDTO> listCate = cateDao.getAll();
-                if (session.getAttribute("ListCategory") != null) {
-                    session.removeAttribute("ListCategory");
+                else{
+                    request.setAttribute("noRight", "View list cake fail");
+                    url = SEARCH;
                 }
-                session.setAttribute("ListCategory", listCate);
-                List<ProductDTO> result = dao.getAllProduct(currentPage, ROWS_PER_PAGE);
-                if (result == null) {
-                    request.setAttribute("ListCakeEmptyError", "List Cake is Empty");
-                } else {
-                    request.setAttribute("ListCakeResult", result);
-                    request.setAttribute("currentPage", currentPage);
-                    request.setAttribute("numberOfPage", numOfPage);
-                }
-                url = LIST_RESULT;
             } catch (SQLException | NamingException | ClassNotFoundException e) {
                 LOG.error(e.toString());
             } finally {

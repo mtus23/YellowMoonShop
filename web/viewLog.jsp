@@ -19,36 +19,80 @@
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
-
+        <style>
+            .nav-item{
+                margin-right: 5px;
+            }
+        </style>
     </head>
     <body>
-        <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-            <a class="nav-item" href="search.jsp">Search Page</a>
-            <a class="nav-item" href="ListAllCakeController">List all Cake</a>
-            <a class="nav-item" href="ListLogController">List all Log</a>
-            <a class="nav-item" href="ListAllCategoryController">List all Category</a>
-            <a class="nav-item my-2" href="LogoutController"><button class="btn btn-primary">Logout</button></a>
+        <c:if test="${empty sessionScope.user || sessionScope.user.roleId == 2}">
+            <c:redirect url="search.jsp"></c:redirect>
+        </c:if>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #e3f2fd;">
+            <a class="navbar-brand" href="search.jsp">Yellow Moon</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                    <li class="nav-item">  
+                        <a class="nav-item" href="search.jsp">Search Page</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-item" href="listAllCake">List all Cake</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-item" href="listAllCategory">List all Category</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-item" href="listLogController">List all Log</a>
+                    </li>
+                </ul>
+                <span class="nav-item my-2">
+                    <c:if test="${empty sessionScope.user}">
+                        <a href="login.jsp" class="nav-item my-2"><button class="btn btn-primary">login</button></a>
+                    </c:if>  
+                    <c:if test="${not empty sessionScope.user}">
+                        <a class="nav-item my-2" href="LogoutController"><button class="btn btn-primary">Logout</button></a>
+                    </c:if>
+                </span>
+            </div>
         </nav>
+
         <div class="container mt-5">
             <div class="d-flex justify-content-center row">
-            <c:if test="${not empty requestScope.ListAllLogError}">
-                <h3 style="color: red;">${requestScope.ListAllLogError}</h3>
-            </c:if>
+                <c:if test="${not empty requestScope.listAllLogError}">
+                    <h3 style="color: red;">${requestScope.listAllLogError}</h3>
+                </c:if>
             </div>
             <div class="lign-self-center justify-content-center row">
-            <c:if test="${not empty requestScope.ListLog}">
-                
-                  <c:forEach var="log" items="${requestScope.ListLog}"> 
+                <c:if test="${not empty requestScope.listLog}">
+                    <c:forEach var="log" items="${requestScope.listLog}"> 
                         <div class="col-9 justify-content-center m-3 rounded border border-primary">
-                                    <strong>
-                                        ${requestScope.MapUserName[log.userId]} has updated ${log.productId} - (${requestScope.MapProductName[log.productId]})
-                                        <p class="date">${log.date}</p>
-                                    </strong>
+                            ${requestScope.mapUserName[log.userId]} has updated product ID: ${log.productId} - (${requestScope.mapProductName[log.productId]})
+                            <p class="date">${log.date}</p>
                         </div>
                     </c:forEach>  
-                
-            </c:if>
-                </div>
+                    <div class="d-flex justify-content-center">
+                        <c:if test="${requestScope.currentPage != 1 && requestScope.numberOfPage != 1}">
+                            <c:if test="${requestScope.currentPage != 1}">
+                                <c:url var="previousPage" value="ListAllCakeController">
+                                    <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
+                                </c:url>
+                                <a href="previousPage">Previous</a>
+                            </c:if>
+                            Page ${requestScope.currentPage} / ${requestScope.numberOfPage}
+                            <c:if test="${requestScope.currentPage < requestScope.numberOfPage}">
+                                <c:url var="nextPage" value="ListAllCakeController">
+                                    <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
+                                </c:url>
+                                <a href="nextPage">Next</a>
+                            </c:if>
+                        </c:if>
+                    </div>
+                </c:if>
+            </div>
         </div>
     </body>
 </html>

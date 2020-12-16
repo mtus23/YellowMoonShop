@@ -53,7 +53,7 @@ public class CartDTO implements Serializable{
         }
     }
 
-    public void UpdateProductFromCart(int proId, int quantity) {
+    public void updateProductFromCart(int proId, int quantity) {
         if (this.items == null) {
             this.items = new HashMap<>();
         }
