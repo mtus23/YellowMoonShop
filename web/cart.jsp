@@ -88,111 +88,112 @@
                 <c:if test="${not empty sessionScope.cart.items}">
                     <div class="table col m-3">
                         <table border="1">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Name</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Total</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
                             <form action="cart" method="POST">
-                                <c:forEach var="item" items="${sessionScope.cart.items}" varStatus="counter">
+                                <thead>
                                     <tr>
-                                        <td>${counter.count}</td>
-                                        <td>${item.key.name}</td>
-                                        <td>${item.key.price} VND</td>
-                                        <td>
-                                            <input type="number" min="1" value="${item.value}" name="txtQuantity${item.key.productId}">
-                                        </td>
-                                        <td>${item.key.price * item.value} VND</td>
-                                        <td><input type="checkbox" name="cbItem" value="${item.key.productId}"></td>
+                                        <th>No</th>
+                                        <th>Name</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                        <th>Action</th>
                                     </tr>
-                                </c:forEach>
-                                <tr>
-                                    <td>
-                                        <p>Total Bill</p>
-                                    </td>
-                                    <td>
-                                        ${sessionScope.totalBill} VND
-                                    </td>
-                                    <td colspan="2">
-                                        <input type="submit" name="btnAction" value="Update selected products" class="btn btn-primary" /><br>
-                                    </td>
-                                    <td colspan="2">
-                                        <input type="submit" name="btnAction" value="Remove selected products" class="btn btn-primary" onclick="return confirm('Are you sure you want to delete these products?');"/>
-                                    </td>
-                                </tr>
-                            </form>
-                            </tbody>
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="item" items="${sessionScope.cart.items}" varStatus="counter">
+                                        <tr>
+                                            <td>${counter.count}</td>
+                                            <td>${item.key.name}</td>
+                                            <td>${item.key.price} VND</td>
+                                            <td>
+                                                <input type="number" min="1" value="${item.value}" max="${item.key.quantity}" name="txtQuantity${item.key.productId}" onchange="updateData(${item.key.productId})" id="txtQuantity${item.key.productId}">
+                                            </td>
+                                            <td>${item.key.price * item.value} VND</td>
+                                            <td> 
+                                                <input type="hidden" name="txtProductId" value="${item.key.productId}">
+                                                <input type="submit" name="btnAction" value="Remove product" class="btn btn-primary" onclick="return confirm('Are you sure you want to delete this product?');">
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                    <tr>
+                                        <td colspan="2">
+                                            <p>Total Bill</p>
+                                        </td>
+                                        <td colspan="2">
+                                            ${sessionScope.totalBill} VND
+                                        </td>
+                                        <td colspan="2">
+                                            <input type="submit" name="btnAction" value="Update cart" class="btn btn-primary" ><br>
+                                        </td>
+                                    </tr>
+                                </tbody>
                         </table>
-
+                        </form>
                     </c:if>
                 </div>
-            </div>
-            <div class="d-flex justify-content-center">
-                <c:if test="${not empty requestScope.checkOutError}">
-                    <p style="color: red;">${requestScope.checkOutError}</p>
-                </c:if>
-                <c:if test="${not empty requestScope.outOfBoundCakeError}">
-                    <div class="alert alert-danger" role="alert">
-                        <h4 class="alert-heading">Error! Not enough cake</h4>
-                        <c:forEach var="error" items="${requestScope.outOfBoundCakeError}">
-                            <p>${error}</p>
-                        </c:forEach>
-                    </div>
-                </c:if>
-            </div>
 
-            <div class="d-flex justify-content-center">
-                <form action="checkOut" method="POST">
-                    <div class="form-group row">
-
-                        <label>Name: </label>
-                        <input name="txtCustomer" type="text" min="1" max="60" class="form-control"
-                               <c:if test="${not empty sessionScope.user}">
-                                   value="${sessionScope.user.name}"
-                               </c:if>
-                               <c:if test="${not empty param.txtCustomer}">
-                                   value="${param.txtCustomer}"
-                               </c:if>
-                               required />
-                    </div>
-                    <div class="form-group row">
-                        <label>Address: </label>
-                        <input name="txtAddress" type="text" min="1" max="50" class="form-control"
-                               <c:if test="${not empty sessionScope.user}">
-                                   value="${sessionScope.user.address}"
-                               </c:if>
-                               <c:if test="${not empty param.txtAddress}">
-                                   value="${param.txtAddress}"
-                               </c:if>
-                               required />
-                    </div>
-                    <div class="form-group row">
-                        <label>Phone: </label>
-                        <input name="txtPhone" type="text" class="form-control"
-                               <c:if test="${not empty sessionScope.user}">
-                                   value="${sessionScope.user.phone}"
-                               </c:if>
-                               <c:if test="${not empty param.txtPhone}">
-                                   value="${param.txtPhone}"
-                               </c:if>
+                <div class="d-flex justify-content-center">
+                    <form action="checkOut" method="POST">
+                        <div class="form-group row m-3">
+                            <label>Name: </label>
+                            <input name="txtCustomer" type="text" min="1" max="60" class="form-control"
+                                   <c:if test="${not empty sessionScope.user}">
+                                       value="${sessionScope.user.name}"
+                                   </c:if>
+                                   <c:if test="${not empty param.txtCustomer}">
+                                       value="${param.txtCustomer}"
+                                   </c:if>
+                                   required >
+                        </div>
+                        <div class="form-group row m-3">
+                            <label>Address: </label>
+                            <input name="txtAddress" type="text" min="1" max="50" class="form-control"
+                                   <c:if test="${not empty sessionScope.user}">
+                                       value="${sessionScope.user.address}"
+                                   </c:if>
+                                   <c:if test="${not empty param.txtAddress}">
+                                       value="${param.txtAddress}"
+                                   </c:if>
+                                   required >
+                        </div>
+                        <div class="form-group row m-3">
+                            <label>Phone: </label>
+                            <input name="txtPhone" type="text" class="form-control"
+                                   <c:if test="${not empty sessionScope.user}">
+                                       value="${sessionScope.user.phone}"
+                                   </c:if>
+                                   <c:if test="${not empty param.txtPhone}">
+                                       value="${param.txtPhone}"
+                                   </c:if>
                                    id="phoneNumber"
                                    required onblur="checkPhoneNumber()">
-                    </div>
-                    <div class="form-group d-flex justify-content-center">
-                        <input class="btn btn-primary" type="submit" value="Checkout">
-                    </div>
-                </form>
+                        </div>
+                        <div class="form-group row m-3">
+                            <c:forEach var="item" items="${sessionScope.cart.items}">
+                                <input type="hidden" min="1" value="${item.value}" max="${item.key.quantity}" name="txtQuantity${item.key.productId}" id="txtQuantityHidden${item.key.productId}">
+                            </c:forEach>
+                            <input class="btn btn-primary" type="submit" value="Checkout" name="btnAction">
+                        </div>
+                    </form>
+                </div>
+                
             </div>
-        </div>
-        <div class="d-flex justify-content-center">
-            <a href="search.jsp">Continue shopping</a>
-        </div>
+            <div class="d-flex justify-content-center row">
+                    <c:if test="${not empty requestScope.checkOutError}">
+                        <p style="color: red;">${requestScope.checkOutError}</p>
+                    </c:if>
+                    <c:if test="${not empty requestScope.outOfBoundCakeError}">
+                        <div class="alert alert-danger" role="alert">
+                            <h4 class="alert-heading">Error! Not enough cake</h4>
+                            <c:forEach var="error" items="${requestScope.outOfBoundCakeError}">
+                                <p>${error}</p>
+                            </c:forEach>
+                        </div>
+                    </c:if>
+                </div>
+            <div class="d-flex justify-content-center">
+                <a href="search.jsp">Continue shopping</a>
+            </div>
     </body>
     <script>
         function checkPhoneNumber() {
@@ -205,6 +206,11 @@
                 return false;
             }
             return true;
+        }
+        function updateData(id) {
+            var x = document.getElementById('txtQuantity'+id).value;
+            document.getElementById('txtQuantityHidden'+id).value = x;
+            console.log();
         }
     </script>
 </html>

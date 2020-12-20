@@ -91,14 +91,14 @@
                         <c:if test="${requestScope.currentPage != 1 && requestScope.numberOfPage != 1}">
 
                             <c:if test="${requestScope.currentPage != 1}">
-                                <c:url var="previousPage" value="listAllCake">
+                                <c:url var="previousPage" value="listAllCategory">
                                     <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
                                 </c:url>
                                 <a href="${previousPage}">Previous</a>
                             </c:if>
                             Page ${requestScope.currentPage} / ${requestScope.numberOfPage}
                             <c:if test="${requestScope.currentPage < requestScope.numberOfPage}">
-                                <c:url var="nextPage" value="listAllCake">
+                                <c:url var="nextPage" value="listAllCaregory">
                                     <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
                                 </c:url>
                                 <a href="${nextPage}">Next</a>
@@ -114,9 +114,9 @@
                     <form action="createCategory" method="POST">
                         <div class="form-inline">
                             <label>Create new category:</label>
-                            <input class="form-control m-3" type="text" name="txtCategoryName" required
-                                   <c:if test="${not empty param.txtCategoryName}">
-                                       value="${param.txtCategoryName}"
+                            <input class="form-control m-3" type="text" name="txtCategoryNameNew" required
+                                   <c:if test="${not empty param.txtCategoryNameNew}">
+                                       value="${param.txtCategoryNameNew}"
                                    </c:if>
                                    >
                             <input type="submit" class="btn btn-primary form-control" value="Create">

@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import jlp0011.dto.CartDTO;
+import jlp0011.dto.ProductDTO;
 import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
@@ -36,6 +37,7 @@ public class UpdateCartController extends HttpServlet {
     private final String ERROR = "error.jsp";
     private final static Logger LOG = Logger.getLogger(UpdateCartController.class);
     private final String SREACH = "search.jsp";
+    private final String CHECKOUT = "CheckOutController";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -43,26 +45,24 @@ public class UpdateCartController extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
             String url = ERROR;
+            boolean check = true;
             try {
                 HttpSession session = request.getSession();
                 UserDTO user = (UserDTO) session.getAttribute("user");
                 if (!(user != null && user.getRoleId() == 1)) {
                     CartDTO cart = (CartDTO) session.getAttribute("cart");
-
                     if (cart.getItems() != null) {
-                        String[] items = request.getParameterValues("cbItem");
-                        if (items != null) {
-                            for (String item : items) {
-                                int proId = Integer.parseInt(item);
-                                String quantityText = request.getParameter("txtQuantity" + proId);
-                                int quantity = Integer.parseInt(quantityText);
-                                cart.updateProductFromCart(proId, quantity);
+                        for (ProductDTO dto : cart.getItems().keySet()) {
+                            String quantityText = request.getParameter("txtQuantity" + dto.getProductId());
+                            int quantity = Integer.parseInt(quantityText);
+                            if (quantity <= dto.getQuantity()) {
+                                cart.updateProductFromCart(dto.getProductId(), quantity);
                             }
-                            int total = cart.getTotalPrice();
-                            session.setAttribute("totalBill", total);
-                            session.setAttribute("cart", cart);
-                            request.setAttribute("updateSuccess", "Update cart success");
                         }
+                        int total = cart.getTotalPrice();
+                        session.setAttribute("totalBill", total);
+                        session.setAttribute("cart", cart);
+                        request.setAttribute("updateSuccess", "Update cart success");
                     }
                     url = CART_PAGE;
                 } else {
@@ -78,7 +78,7 @@ public class UpdateCartController extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+// <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *

@@ -77,14 +77,14 @@
                     <div class="d-flex justify-content-center">
                         <c:if test="${requestScope.currentPage != 1 && requestScope.numberOfPage != 1}">
                             <c:if test="${requestScope.currentPage != 1}">
-                                <c:url var="previousPage" value="ListAllCakeController">
+                                <c:url var="previousPage" value="listAllLog">
                                     <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
                                 </c:url>
                                 <a href="previousPage">Previous</a>
                             </c:if>
                             Page ${requestScope.currentPage} / ${requestScope.numberOfPage}
                             <c:if test="${requestScope.currentPage < requestScope.numberOfPage}">
-                                <c:url var="nextPage" value="ListAllCakeController">
+                                <c:url var="nextPage" value="listAllLog">
                                     <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
                                 </c:url>
                                 <a href="nextPage">Next</a>

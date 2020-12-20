@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import jlp0011.dto.CartDTO;
+import jlp0011.dto.ProductDTO;
 import jlp0011.dto.UserDTO;
 import org.apache.log4j.Logger;
 
@@ -49,14 +50,12 @@ public class RemoveCartItemController extends HttpServlet {
                 if (!(user != null && user.getRoleId() == 1)) {
                     CartDTO cart = (CartDTO) session.getAttribute("cart");
                     if (cart.getItems() != null) {
-                        String[] items = request.getParameterValues("cbItem");
-                        int total = 0;
-                        if (items != null) {
-                            for (String item : items) {
-                                int proId = Integer.parseInt(item);
-                                cart.removeProductFromCart(proId);
-                            }
-                            total = cart.getTotalPrice();
+                        String proId = request.getParameter("txtProductId");
+                        int id = Integer.parseInt(proId);
+                        ProductDTO dto = cart.searchForProductInfo(id);
+                        if (dto != null) {
+                            cart.removeProductFromCart(id);
+                            int total = cart.getTotalPrice();
                             session.setAttribute("totalBill", total);
                             session.setAttribute("cart", cart);
                             request.setAttribute("removeCartSuccess", "Remove Cake from cart success");

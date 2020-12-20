@@ -32,6 +32,13 @@
                 .nav-item{
                     margin-right: 5px;
                 }
+                .max-lines {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3; /* number of lines to show */
+                    -webkit-box-orient: vertical;
+                }
             </style>
         </head>
         <body>
@@ -137,14 +144,13 @@
                             <input type="submit" class="btn btn-primary form-control ml-3" value="Search">
                         </div>
                     </form>
-                    <div>
-                        <hr>
-                        <c:if test="${not empty requestScope.errorSEarch}">
-                            <p style="color: red;">${requestScope.ecrrorSearch}</p>
-                        </c:if>
-                    </div>
                 </div>
                 <hr>
+                <c:if test="${not empty requestScope.errorSearch}">
+                    <div class="alert alert-danger" role="alert">
+                        ${requestScope.errorSearch}
+                    </div>
+                </c:if>
                 <div class="row">
                     <c:if test="${not empty requestScope.searchResult}">
                         <c:set var="currentPage" value="${requestScope.currentPage}"></c:set>
@@ -156,8 +162,9 @@
                                 <div class="card-body">
                                     <h4 class="card-title">${dto.name}</h4>
                                     <p class="card-text">${dto.price} VND</p>
-                                    <p class="card-text">${dto.description}</p>
+                                    <p class="card-text max-lines">${dto.description}</p>
                                     <p style="font-size: 85%">From: ${dto.createDate} - ${dto.expirationDate}</p>
+                                    <p>Quantity: ${dto.quantity}</p>
                                     <hr>
                                     <c:if test="${sessionScope.user.roleId != 1}">
                                         <form action="addToCart">
@@ -178,6 +185,9 @@
 
                                 <c:if test="${requestScope.currentPage != 1}">
                                     <c:url var="previousPage" value="listAllCake">
+                                        <c:param name="txtProductNameSearch" value="${param.txtProductNameSearch}"></c:param>
+                                        <c:param name="cboCategory" value="${param.cboCategory}"></c:param>
+                                        <c:param name="rgPrice" value="${param.rgPrice}"></c:param>
                                         <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
                                     </c:url>
                                     <a href="${previousPage}">Previous</a>
@@ -185,6 +195,9 @@
                                 Page ${requestScope.currentPage} / ${requestScope.numberOfPage}
                                 <c:if test="${requestScope.currentPage < requestScope.numberOfPage}">
                                     <c:url var="nextPage" value="listAllCake">
+                                        <c:param name="txtProductNameSearch" value="${param.txtProductNameSearch}"></c:param>
+                                        <c:param name="cboCategory" value="${param.cboCategory}"></c:param>
+                                        <c:param name="rgPrice" value="${param.rgPrice}"></c:param>
                                         <c:param name="txtCurrentPage" value="${currentPage - 1}"/>
                                     </c:url>
                                     <a href="${nextPage}">Next</a>

@@ -58,11 +58,16 @@ public class AddToCartController extends HttpServlet {
                     }
                     int proId = Integer.parseInt(productId);
                     ProductDTO dto = productDao.getProduct(proId);
-                    cart.addProductToCart(dto, 1);
-                    int total = cart.getTotalPrice();
-                    session.setAttribute("totalBill", total);
-                    session.setAttribute("cart", cart);
-                    request.setAttribute("AddSuccess", "Adding cake to cart successful");
+                    int quantityLeft = cart.getProductQuantity(dto);
+                    if (dto.getQuantity() > quantityLeft) {
+                        cart.addProductToCart(dto, 1);
+                        int total = cart.getTotalPrice();
+                        session.setAttribute("totalBill", total);
+                        session.setAttribute("cart", cart);
+                        request.setAttribute("AddSuccess", "Adding cake to cart successful");
+                    } else {
+                        request.setAttribute("AddFail", "Adding to cart fail, "+dto.getName() +" only has "+dto.getQuantity()+" left");
+                    }
                 } else {
                     request.setAttribute("AddFail", "Adding cake to cart fail");
                 }

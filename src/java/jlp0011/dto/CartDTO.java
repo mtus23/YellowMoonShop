@@ -13,30 +13,41 @@ import java.util.Map;
  *
  * @author DELL
  */
-public class CartDTO implements Serializable{
+public class CartDTO implements Serializable {
+
     private Map<ProductDTO, Integer> items;
-    
-    public Map<ProductDTO, Integer> getItems(){
+
+    public Map<ProductDTO, Integer> getItems() {
         return items;
     }
-    
-    public int getTotalPrice(){
-        int total=0;
-        if(this.items != null){
-            for(ProductDTO dto : items.keySet()){
-                total += (dto.getPrice()*this.items.get(dto));
+
+    public int getTotalPrice() {
+        int total = 0;
+        if (this.items != null) {
+            for (ProductDTO dto : items.keySet()) {
+                total += (dto.getPrice() * this.items.get(dto));
             }
         }
         return total;
     }
-    
-    private ProductDTO searchForProductInfo(int id) {
-        for (ProductDTO dto : items.keySet()) {
-            if (dto.getProductId() == id) {
-                return dto;
+
+    public ProductDTO searchForProductInfo(int id) {
+        if (this.items != null) {
+            for (ProductDTO dto : items.keySet()) {
+                if (dto.getProductId() == id) {
+                    return dto;
+                }
             }
         }
         return null;
+    }
+
+    public int getProductQuantity(ProductDTO product) {
+        ProductDTO dto = searchForProductInfo(product.getProductId());
+        if (dto != null) {
+            return this.items.get(dto);
+        }
+        return 0;
     }
 
     public void addProductToCart(ProductDTO product, int quantity) {
@@ -49,7 +60,7 @@ public class CartDTO implements Serializable{
             this.items.put(product, quantity);
         } else {
             int total = this.items.get(dto);
-            this.items.put(dto, total + quantity);
+            this.items.put(product, total + quantity);
         }
     }
 
